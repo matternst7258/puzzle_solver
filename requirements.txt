@@ -1,0 +1,28 @@
+# Web Framework
+flask==3.0.0
+flask-cors==4.0.0
+werkzeug==3.0.1
+
+# Deep Learning & Computer Vision
+tensorflow==2.15.0
+opencv-python==4.8.1.78
+pillow==10.1.0
+numpy==1.24.3
+
+# HTTP requests for URL downloads
+requests==2.31.0
+
+# File type detection
+python-magic-bin==0.4.14; sys_platform == 'win32'
+python-magic==0.4.27; sys_platform != 'win32'
+
+# Image processing utilities
+scikit-image==0.22.0
+scipy==1.11.4
+
+# Utilities
+python-dotenv==1.0.0
+gunicorn==21.2.0
+
+# UUID generation
+uuid==1.30

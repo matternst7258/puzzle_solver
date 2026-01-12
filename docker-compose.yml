@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  puzzlesolver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: puzzlesolver
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount saved puzzles directory (persists across restarts if needed)
+      - ./saved_puzzles:/app/saved_puzzles
+      # Mount logs directory for easy access
+      - ./logs:/app/logs
+    environment:
+      # Flask configuration
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+      # Optional: Set secret key (change this!)
+      - SECRET_KEY=change-this-to-a-random-secret-key
+      # TensorFlow optimizations
+      - TF_CPP_MIN_LOG_LEVEL=2
+      # Disable GPU if not available (set to 1 to enable)
+      - CUDA_VISIBLE_DEVICES=-1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/puzzle_solver/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Resource limits (optional, adjust based on your system)
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
