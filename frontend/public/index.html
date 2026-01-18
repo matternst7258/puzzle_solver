@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PuzzleSolver AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            width: 100%;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 2.5rem;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            margin-top: 10px;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .wizard-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .wizard-steps::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 30px;
+            right: 30px;
+            height: 2px;
+            background: #e0e0e0;
+            z-index: 0;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .step-number.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-align: center;
+        }
+
+        .content-area {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .content-area h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .content-area p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            margin: 20px 0;
+            background: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            background: #f0f2ff;
+            border-color: #764ba2;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .feature-list {
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            color: #666;
+        }
+
+        .feature-item::before {
+            content: '✓';
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        .api-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            margin-top: 10px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 30px 20px;
+            }
+
+            .wizard-steps {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .step-label {
+                font-size: 0.65rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🧩 PuzzleSolver AI</h1>
+            <p class="subtitle">Find where your puzzle pieces belong using AI</p>
+            <div style="text-align: center;">
+                <div class="api-status">
+                    <span class="status-dot"></span>
+                    <span id="api-status">Checking API...</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="card">
+                <div class="wizard-steps">
+                    <div class="step">
+                        <div class="step-number active">1</div>
+                        <div class="step-label">Select Puzzle</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Upload Piece</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Processing</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-label">Results</div>
+                    </div>
+                </div>
+
+                <div class="content-area" id="content">
+                    <h2>Welcome to PuzzleSolver AI</h2>
+                    <p>This application helps you find where puzzle pieces belong using advanced computer vision and deep learning.</p>
+
+                    <div class="feature-list">
+                        <div class="feature-item">High accuracy matching with ResNet50</div>
+                        <div class="feature-item">Automatic piece orientation detection</div>
+                        <div class="feature-item">Privacy-first: pieces never saved</div>
+                        <div class="feature-item">Save multiple puzzles to your library</div>
+                    </div>
+
+                    <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                        <div class="upload-icon">📤</div>
+                        <p><strong>Upload a puzzle image to get started</strong></p>
+                        <p style="font-size: 0.9rem; color: #999;">or drag and drop here</p>
+                        <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+                    </div>
+
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <p>Processing your image...</p>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn-primary" onclick="startUpload()">Get Started</button>
+                        <button class="btn-secondary" onclick="showSavedPuzzles()">View Saved Puzzles</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>PuzzleSolver AI v1.0.0 | Privacy-First Puzzle Matching</p>
+            <p style="margin-top: 5px; font-size: 0.8rem;">Your piece images are never saved to disk</p>
+        </div>
+    </footer>
+
+    <script>
+        // Check API health on load
+        async function checkAPIHealth() {
+            try {
+                const response = await fetch('/puzzle_solver/api/health');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('api-status').textContent = 'API Ready';
+                } else {
+                    document.getElementById('api-status').textContent = 'API Error';
+                    document.querySelector('.status-dot').style.background = '#ef4444';
+                }
+            } catch (error) {
+                console.error('API health check failed:', error);
+                document.getElementById('api-status').textContent = 'API Offline';
+                document.querySelector('.status-dot').style.background = '#ef4444';
+            }
+        }
+
+        // Handle file selection
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                console.log('File selected:', file.name);
+                uploadPuzzle(file);
+            }
+        }
+
+        // Upload puzzle
+        async function uploadPuzzle(file) {
+            const loading = document.getElementById('loading');
+            const content = document.getElementById('content').children;
+            
+            // Show loading
+            loading.style.display = 'block';
+            Array.from(content).forEach(el => {
+                if (el.id !== 'loading') el.style.display = 'none';
+            });
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('name', file.name.replace(/\.[^/.]+$/, ''));
+
+                const response = await fetch('/puzzle_solver/api/puzzles/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Puzzle uploaded successfully! Full React frontend coming soon.');
+                    console.log('Puzzle ID:', data.puzzle_id);
+                } else {
+                    alert('Error: ' + data.error + '\n' + (data.details || ''));
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('Failed to upload puzzle: ' + error.message);
+            } finally {
+                // Hide loading
+                loading.style.display = 'none';
+                Array.from(content).forEach(el => {
+                    if (el.id !== 'loading') el.style.display = 'block';
+                });
+            }
+        }
+
+        // Start upload button
+        function startUpload() {
+            document.getElementById('file-input').click();
+        }
+
+        // Show saved puzzles (placeholder)
+        async function showSavedPuzzles() {
+            try {
+                const response = await fetch('/puzzle_solver/api/puzzles');
+                const data = await response.json();
+
+                if (data.success && data.puzzles.length > 0) {
+                    alert(`You have ${data.puzzles.length} saved puzzle(s).\n\nFull puzzle library UI coming soon!`);
+                    console.log('Saved puzzles:', data.puzzles);
+                } else {
+                    alert('No saved puzzles yet. Upload a puzzle to get started!');
+                }
+            } catch (error) {
+                console.error('Error fetching puzzles:', error);
+                alert('Failed to load puzzles: ' + error.message);
+            }
+        }
+
+        // Drag and drop support
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = '#e8ebff';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.background = '#f8f9ff';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = '#f8f9ff';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                uploadPuzzle(files[0]);
+            }
+        });
+
+        // Check API on load
+        checkAPIHealth();
+    </script>
+</body>
+</html>

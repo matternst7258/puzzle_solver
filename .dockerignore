@@ -1,0 +1,80 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# macOS
+.DS_Store
+._*
+
+# Documentation
+README.md
+docs/
+*.md
+
+# Application data (shouldn't be in image)
+saved_puzzles/
+temp/
+logs/
+*.log
+
+# Test files
+tests/
+*.test.py
+test_*.py
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Development files
+.env
+.env.local
+.env.*.local
+*.bak
+*.tmp
+*.swp
+*~
+
+# Node (if present)
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Frontend source (if building separately)
+frontend/src/
+frontend/public/
+frontend/node_modules/
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Unnecessary for Docker image
+LICENSE
+CHANGELOG.md
+CONTRIBUTING.md

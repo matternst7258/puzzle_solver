@@ -20,50 +20,77 @@ A locally-hosted web application that uses computer vision and deep learning to 
 
 ## Quick Start
 
-### 1. Clone or Download
+### Option 1: Using Startup Scripts (Recommended)
+
+The easiest way to start PuzzleSolver:
 
 ```bash
-git clone <repository-url>
-cd puzzlesolver
+# Make scripts executable (first time only)
+chmod +x start.sh stop.sh
+
+# Start the application
+./start.sh
 ```
 
-### 2. Build and Run
+The script will:
+- Check that Docker is installed and running
+- Create necessary directories
+- Build the Docker image
+- Start the container
+- Wait for the app to be ready
+- Open your browser automatically (macOS)
+
+**To stop the application:**
 
 ```bash
-# Using docker-compose (recommended)
+./stop.sh
+```
+
+This will gracefully shut down the container and optionally clean up data.
+
+### Option 2: Using docker-compose
+
+```bash
+# Start the application
 docker-compose up -d
 
-# Or using docker directly
-docker build -t puzzlesolver:latest .
-docker run -d --name puzzlesolver -p 8000:8000 -v $(pwd)/saved_puzzles:/app/saved_puzzles puzzlesolver:latest
+# Stop the application
+docker-compose down
 ```
 
-### 3. Access the Application
-
-Open your browser and navigate to:
-```
-http://localhost:8000/puzzle_solver/
-```
-
-### 4. Stop the Application
+### Option 3: Using Docker directly
 
 ```bash
-# Using docker-compose
-docker-compose down
+# Build the image
+docker build -t puzzlesolver:latest .
 
-# Or using docker directly
+# Run the container
+docker run -d \
+  --name puzzlesolver \
+  -p 8000:8000 \
+  -v $(pwd)/saved_puzzles:/app/saved_puzzles \
+  -v $(pwd)/logs:/app/logs \
+  puzzlesolver:latest
+
+# Stop the container
 docker stop puzzlesolver
 docker rm puzzlesolver
+```
+
+### Access the Application
+
+Once started, open your browser and navigate to:
+```
+http://localhost:8000/puzzle_solver/
 ```
 
 ## Usage Guide
 
 ### Step 1: Load Your Puzzle
 
-Choose one of three options:
+Choose one of two options:
 - **Upload Image** - Select a puzzle image file from your computer
 - **Enter URL** - Provide a direct URL to a puzzle image
-- **Load Saved** - Select from previously saved puzzles
 
 ### Step 2: Confirm and Save (Optional)
 
@@ -118,25 +145,41 @@ The app will show:
 
 ```
 puzzlesolver/
+├── start.sh                    # Startup script
+├── stop.sh                     # Shutdown script
 ├── Dockerfile                  # Docker configuration
 ├── docker-compose.yml          # Docker Compose configuration
 ├── requirements.txt            # Python dependencies
 ├── app.py                      # Main Flask application
 ├── README.md                   # This file
+├── .gitignore
+├── .dockerignore
 │
 ├── src/                        # Source code
+│   ├── __init__.py
 │   ├── api/                    # API routes and handlers
+│   │   ├── __init__.py
+│   │   └── routes.py
 │   ├── services/               # Business logic
+│   │   ├── __init__.py
+│   │   ├── puzzle_service.py
+│   │   ├── matching_service.py
+│   │   └── image_service.py
 │   ├── models/                 # ML models and feature extraction
+│   │   ├── __init__.py
+│   │   └── feature_extractor.py
 │   └── utils/                  # Utility functions
+│       ├── __init__.py
+│       ├── quality_check.py
+│       └── validators.py
 │
-├── frontend/                   # React frontend application
-│   ├── src/
+├── frontend/                   # Frontend application
 │   └── public/
+│       └── index.html
 │
-├── saved_puzzles/              # Stored puzzle images (mounted volume)
-├── temp/                       # Temporary processing (not persisted)
-└── logs/                       # Application logs
+├── saved_puzzles/              # Stored puzzle images (created on first run)
+├── temp/                       # Temporary processing (created on first run)
+└── logs/                       # Application logs (created on first run)
 ```
 
 ## API Endpoints
@@ -222,15 +265,22 @@ deploy:
 
 ### Application Won't Start
 
+**Check Docker is running:**
+```bash
+docker info
+```
+
 **Check if port 8000 is already in use:**
 ```bash
 lsof -i :8000
-# Kill the process using the port or change port in docker-compose.yml
+# Kill the process or change port in docker-compose.yml
 ```
 
 **View logs:**
 ```bash
-docker-compose logs -f puzzlesolver
+docker logs -f puzzlesolver
+# or
+docker-compose logs -f
 ```
 
 ### Slow Performance
@@ -277,18 +327,10 @@ export FLASK_ENV=development
 python app.py
 ```
 
-### Frontend Development
-
-```bash
-cd frontend
-npm install
-npm start
-```
-
 ### Running Tests
 
 ```bash
-# Run unit tests
+# Run unit tests (once implemented)
 python -m pytest tests/
 
 # Run with coverage
@@ -305,7 +347,10 @@ python -m pytest --cov=src tests/
    - Shape matching (edge orientation)
    - Deep feature matching (2048-dim vectors)
 3. **Multi-Orientation** - Tests all 4 rotations (0°, 90°, 180°, 270°)
-4. **Confidence Scoring** - Weighted combination of color, shape, and feature similarity
+4. **Confidence Scoring** - Weighted combination of color, shape, and feature similarity:
+   - Color similarity: 25%
+   - Shape matching: 25%
+   - Deep features: 50%
 
 ### Processing Time
 
@@ -325,17 +370,79 @@ python -m pytest --cov=src tests/
 - Automatic resizing: Large images resized to max 2048x2048
 - Minimum dimensions: 200x200 pixels
 
+## Useful Commands
+
+**View application logs:**
+```bash
+docker logs -f puzzlesolver
+```
+
+**Restart the application:**
+```bash
+docker restart puzzlesolver
+# or
+docker-compose restart
+```
+
+**Access container shell:**
+```bash
+docker exec -it puzzlesolver /bin/bash
+```
+
+**Clean up all data:**
+```bash
+# WARNING: This deletes all saved puzzles!
+rm -rf saved_puzzles/* logs/* temp/*
+```
+
+**Remove everything and start fresh:**
+```bash
+./stop.sh  # Follow prompts to remove image and data
+./start.sh  # Rebuild and restart
+```
+
+## Data Management
+
+### Saved Puzzles Location
+
+All saved puzzles are stored in:
+```
+./saved_puzzles/
+```
+
+Each puzzle has its own directory:
+```
+saved_puzzles/
+└── {puzzle-id}/
+    ├── original.jpg      # Processed puzzle image
+    ├── thumbnail.jpg     # 200x200 thumbnail
+    ├── features.pkl      # Pre-computed features
+    └── metadata.json     # Puzzle metadata
+```
+
+### Backup Your Puzzles
+
+To backup your saved puzzles:
+```bash
+tar -czf puzzles-backup-$(date +%Y%m%d).tar.gz saved_puzzles/
+```
+
+To restore from backup:
+```bash
+tar -xzf puzzles-backup-YYYYMMDD.tar.gz
+```
+
 ## License
 
 [Your License Here]
 
 ## Support
 
-For issues, questions, or contributions, please [open an issue](your-repo-url/issues).
+For issues, questions, or contributions, please open an issue on the project repository.
 
 ## Acknowledgments
 
 - TensorFlow for deep learning capabilities
 - OpenCV for computer vision operations
 - Flask for the web framework
-- React for the frontend interface
+- ResNet50 architecture for feature extraction
